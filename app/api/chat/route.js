@@ -10,7 +10,7 @@ export async function POST(req) {
 
     // 1. Generate text response using Gemini 2.5 Flash
     const aiResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       contents: message,
     });
 

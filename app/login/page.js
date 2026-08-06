@@ -37,7 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
+    <div className="auth-page" style={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
@@ -46,7 +46,7 @@ export default function LoginPage() {
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
       padding: '1rem',
     }}>
-      <div style={{
+      <div className="auth-card" style={{
         background: 'rgba(255, 255, 255, 0.04)',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '20px',
@@ -58,7 +58,7 @@ export default function LoginPage() {
       }}>
         {/* Logo / Title */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{
+          <div className="auth-logo" style={{
             width: '56px',
             height: '56px',
             borderRadius: '16px',
@@ -71,15 +71,15 @@ export default function LoginPage() {
           }}>
             💬
           </div>
-          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 700, margin: 0 }}>
+          <h1 className="auth-title" style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 700, margin: 0 }}>
             Welcome back
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.875rem', marginTop: '0.4rem' }}>
+          <p className="auth-subtitle" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.875rem', marginTop: '0.4rem' }}>
             Sign in to chat with AI Vaibhav
           </p>
         </div>
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <form onSubmit={handleLogin} className="auth-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* Identifier field */}
           <div>
             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '0.8rem', fontWeight: 500, marginBottom: '0.4rem', letterSpacing: '0.02em' }}>
@@ -93,6 +93,7 @@ export default function LoginPage() {
               placeholder="vaibhav or you@example.com"
               required
               autoComplete="username"
+              className="auth-input"
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
@@ -123,6 +124,7 @@ export default function LoginPage() {
               placeholder="Enter your password"
               required
               autoComplete="current-password"
+              className="auth-input"
               style={{
                 width: '100%',
                 padding: '0.75rem 1rem',
@@ -162,6 +164,7 @@ export default function LoginPage() {
             type="submit"
             id="login-btn"
             disabled={loading}
+            className="auth-button"
             style={{
               width: '100%',
               padding: '0.85rem',

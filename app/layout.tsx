@@ -27,3 +27,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     </html>
   );
 }
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};

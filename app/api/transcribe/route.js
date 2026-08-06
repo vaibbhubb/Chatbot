@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const TRANSCRIBE_MODELS = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-flash-lite-latest'];
 
 export async function POST(req) {
   try {
@@ -10,8 +11,7 @@ export async function POST(req) {
       return Response.json({ success: false, error: 'No audio provided' }, { status: 400 });
     }
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await generateWithFallback({
       contents: [
         {
           role: 'user',
@@ -28,7 +28,7 @@ export async function POST(req) {
           ],
         },
       ],
-    });
+    }, TRANSCRIBE_MODELS);
 
     const transcription = response.text?.trim();
 
@@ -41,4 +41,21 @@ export async function POST(req) {
     console.error('Transcription error:', error);
     return Response.json({ success: false, error: 'Transcription failed' }, { status: 500 });
   }
+}
+
+async function generateWithFallback(request, models) {
+  let lastError;
+
+  for (const model of models) {
+    try {
+      return await ai.models.generateContent({ model, ...request });
+    } catch (err) {
+      lastError = err;
+      const status = err?.status || err?.error?.status;
+      if (status === 404 || status === 429) continue;
+      throw err;
+    }
+  }
+
+  throw lastError;
 }

@@ -138,11 +138,11 @@ export default function SignupPage() {
   };
 
   return (
-    <div style={pageStyle}>
-      <div style={cardStyle}>
+    <div className="auth-page" style={pageStyle}>
+      <div className="auth-card" style={cardStyle}>
         {/* Logo / Title */}
         <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <div style={{
+          <div className="auth-logo" style={{
             width: '56px',
             height: '56px',
             borderRadius: '16px',
@@ -155,18 +155,18 @@ export default function SignupPage() {
           }}>
             ✨
           </div>
-          <h1 style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 700, margin: 0 }}>
+          <h1 className="auth-title" style={{ color: '#fff', fontSize: '1.6rem', fontWeight: 700, margin: 0 }}>
             Create account
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.875rem', marginTop: '0.4rem' }}>
+          <p className="auth-subtitle" style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.875rem', marginTop: '0.4rem' }}>
             Join and chat with AI Vaibhav
           </p>
         </div>
 
         {/* Step indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+        <div className="auth-stepper" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
           {[1, 2].map((s) => (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', flex: s < 2 ? '1' : 'none', gap: '0.5rem' }}>
+            <div key={s} className="auth-step-item" style={{ display: 'flex', alignItems: 'center', flex: s < 2 ? '1' : 'none', gap: '0.5rem' }}>
               <div style={{
                 width: '28px',
                 height: '28px',
@@ -183,7 +183,7 @@ export default function SignupPage() {
               }}>
                 {step > s ? '✓' : s}
               </div>
-              <span style={{
+              <span className="auth-step-label" style={{
                 fontSize: '0.78rem',
                 color: step >= s ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)',
                 whiteSpace: 'nowrap',
@@ -191,7 +191,7 @@ export default function SignupPage() {
                 {s === 1 ? 'Your details' : 'Verify email'}
               </span>
               {s < 2 && (
-                <div style={{
+                <div className="auth-step-line" style={{
                   flex: 1,
                   height: '1px',
                   background: step > s ? 'rgba(99,102,241,0.5)' : 'rgba(255,255,255,0.1)',
@@ -205,7 +205,7 @@ export default function SignupPage() {
 
         {/* STEP 1: Username + Email */}
         {step === 1 && (
-          <form onSubmit={handleSendOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <form onSubmit={handleSendOTP} className="auth-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
             <div>
               <label style={labelStyle}>USERNAME</label>
               <input
@@ -216,6 +216,7 @@ export default function SignupPage() {
                 placeholder="e.g. vaibhav123"
                 required
                 autoComplete="username"
+                className="auth-input"
                 style={inputStyle()}
                 onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
                 onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
@@ -235,6 +236,7 @@ export default function SignupPage() {
                 placeholder="you@example.com"
                 required
                 autoComplete="email"
+                className="auth-input"
                 style={inputStyle()}
                 onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
                 onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
@@ -261,6 +263,7 @@ export default function SignupPage() {
               type="submit"
               id="send-otp-btn"
               disabled={loading}
+              className="auth-button"
               style={{
                 width: '100%',
                 padding: '0.85rem',
@@ -283,7 +286,7 @@ export default function SignupPage() {
 
         {/* STEP 2: Password + OTP */}
         {step === 2 && (
-          <form onSubmit={handleVerifyOTP} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+          <form onSubmit={handleVerifyOTP} className="auth-form" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
             <div style={{
               background: 'rgba(99,102,241,0.08)',
               border: '1px solid rgba(99,102,241,0.2)',
@@ -306,6 +309,7 @@ export default function SignupPage() {
                 placeholder="000000"
                 required
                 maxLength={6}
+                className="auth-input"
                 style={{
                   ...inputStyle(),
                   textAlign: 'center',
@@ -328,6 +332,7 @@ export default function SignupPage() {
                 placeholder="Min. 8 characters"
                 required
                 autoComplete="new-password"
+                className="auth-input"
                 style={inputStyle(error && error.includes('password'))}
                 onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
                 onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
@@ -344,6 +349,7 @@ export default function SignupPage() {
                 placeholder="Repeat your password"
                 required
                 autoComplete="new-password"
+                className="auth-input"
                 style={inputStyle(error && error.includes('match'))}
                 onFocus={(e) => e.target.style.borderColor = 'rgba(99,102,241,0.6)'}
                 onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
@@ -375,6 +381,7 @@ export default function SignupPage() {
               type="submit"
               id="create-account-btn"
               disabled={loading}
+              className="auth-button"
               style={{
                 width: '100%',
                 padding: '0.85rem',

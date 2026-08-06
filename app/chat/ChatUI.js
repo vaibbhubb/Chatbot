@@ -214,7 +214,7 @@ export default function ChatUI({ username }) {
   // RENDER
   // ═══════════════════════════════════════════════════════════════════
   return (
-    <div style={{
+    <div className="chat-page chat-shell" style={{
       display: 'flex', flexDirection: 'column', height: '100vh',
       background: '#09090f',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -228,7 +228,7 @@ export default function ChatUI({ username }) {
       </div>
 
       {/* ── HEADER ── */}
-      <header style={{
+      <header className="chat-header" style={{
         position: 'relative', zIndex: 10,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0.85rem 1.5rem',
@@ -238,7 +238,7 @@ export default function ChatUI({ username }) {
         flexShrink: 0,
       }}>
         {/* Left: AI info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div className="chat-header-left" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{
             width: '42px', height: '42px', borderRadius: '14px', flexShrink: 0,
             background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
@@ -246,20 +246,20 @@ export default function ChatUI({ username }) {
             fontSize: '1.2rem', boxShadow: '0 0 20px rgba(99,102,241,0.3)',
           }}>💬</div>
           <div>
-            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
+            <div className="chat-title" style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
               AI Vaibhav
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '1px' }}>
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.6)' }} />
-              <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Always online</span>
+              <span className="chat-status" style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Always online</span>
             </div>
           </div>
         </div>
 
         {/* Right: controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+        <div className="chat-controls" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {/* Tier badge */}
-          <div style={{
+          <div className="chat-badge" style={{
             padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 600,
             color: tierInfo.color, background: tierInfo.bg, border: `1px solid ${tierInfo.border}`,
           }}>
@@ -267,7 +267,7 @@ export default function ChatUI({ username }) {
           </div>
 
           {/* Username */}
-          <div style={{
+          <div className="chat-username" style={{
             padding: '0.25rem 0.65rem', borderRadius: '20px', fontSize: '0.72rem',
             color: 'rgba(255,255,255,0.45)', background: 'rgba(255,255,255,0.05)',
             border: '1px solid rgba(255,255,255,0.07)',
@@ -309,13 +309,13 @@ export default function ChatUI({ username }) {
       </header>
 
       {/* ── MESSAGES ── */}
-      <main style={{
+      <main className="chat-main" style={{
         flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1,
         padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.25rem',
       }}>
-        <div style={{ maxWidth: '720px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div className="chat-list" style={{ maxWidth: '720px', width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {messages.map((msg, idx) => (
-            <div key={idx} style={{
+            <div key={idx} className="chat-row" style={{
               display: 'flex',
               flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
               alignItems: 'flex-end',
@@ -323,7 +323,7 @@ export default function ChatUI({ username }) {
               animation: 'msgIn 0.25s ease',
             }}>
               {/* Avatar */}
-              <div style={{
+              <div className="chat-avatar" style={{
                 width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
                 background: msg.role === 'ai'
                   ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
@@ -336,8 +336,8 @@ export default function ChatUI({ username }) {
               </div>
 
               {/* Bubble + controls */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '75%', gap: '0.3rem' }}>
-                <div style={{
+              <div className="chat-bubble-wrap" style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '75%', gap: '0.3rem' }}>
+                <div className="chat-bubble" style={{
                   padding: '0.75rem 1rem',
                   borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
                   background: msg.role === 'user'
@@ -352,8 +352,8 @@ export default function ChatUI({ username }) {
                 </div>
 
                 {/* Bottom meta: timestamp + play button for AI messages */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)' }}>
+                <div className="chat-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span className="chat-time" style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.25)' }}>
                     {formatTime(new Date(msg.time))}
                   </span>
                   {msg.role === 'ai' && (
@@ -409,7 +409,7 @@ export default function ChatUI({ username }) {
       </main>
 
       {/* ── INPUT BAR ── */}
-      <footer style={{
+      <footer className="chat-footer" style={{
         position: 'relative', zIndex: 10,
         padding: '1rem 1.5rem 1.25rem',
         background: 'rgba(9,9,15,0.85)',
@@ -441,7 +441,7 @@ export default function ChatUI({ username }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{
+        <form onSubmit={handleSubmit} className="chat-compose" style={{
           maxWidth: '720px', margin: '0 auto',
           display: 'flex', gap: '0.6rem', alignItems: 'center',
         }}>
@@ -452,6 +452,7 @@ export default function ChatUI({ username }) {
             onClick={handleMicClick}
             disabled={transcribing || loading}
             title={recording ? 'Stop recording' : 'Record voice message'}
+            className="chat-mic"
             style={{
               width: '46px', height: '46px', borderRadius: '14px', flexShrink: 0,
               border: recording ? '1px solid rgba(239,68,68,0.5)' : '1px solid rgba(255,255,255,0.08)',
@@ -474,6 +475,7 @@ export default function ChatUI({ username }) {
             onKeyDown={handleKeyDown}
             placeholder={recording ? 'Recording…' : transcribing ? 'Transcribing…' : 'Type a message…'}
             disabled={loading || recording}
+            className="chat-input"
             style={{
               flex: 1, padding: '0.75rem 1rem', borderRadius: '14px',
               background: 'rgba(255,255,255,0.05)',
@@ -490,6 +492,7 @@ export default function ChatUI({ username }) {
             type="submit"
             id="send-btn"
             disabled={loading || !input.trim() || recording}
+            className="chat-send"
             style={{
               height: '46px', padding: '0 1.4rem', borderRadius: '14px', flexShrink: 0,
               border: 'none',
@@ -510,7 +513,7 @@ export default function ChatUI({ username }) {
         </form>
 
         {/* Hint text */}
-        <p style={{ textAlign: 'center', fontSize: '0.65rem', color: 'rgba(255,255,255,0.18)', marginTop: '0.6rem', marginBottom: 0 }}>
+        <p className="chat-hint" style={{ textAlign: 'center', fontSize: '0.65rem', color: 'rgba(255,255,255,0.18)', marginTop: '0.6rem', marginBottom: 0 }}>
           🎤 Voice note → text preview → send &nbsp;|&nbsp; 🔇 Audio off by default — click ▶ on any message or 🔊 for auto-play
         </p>
       </footer>

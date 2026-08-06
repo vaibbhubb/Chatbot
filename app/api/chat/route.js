@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import nodemailer from 'nodemailer';
 import { getSession } from '../../../lib/session';
 import { getSystemPrompt } from '../../../lib/vaibhav-context';
+import { logChatQuery } from '../../../lib/chat-queries';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const CHAT_MODELS = ['gemini-flash-latest', 'gemini-3.6-flash'];
@@ -68,6 +69,11 @@ export async function POST(req) {
     // 2. Check if this message needs to alert the real Vaibhav
     //    Run this in the background (don't block the response)
     const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
+    try {
+      await logChatQuery({ username, queryText: lastUserMessage });
+    } catch (logError) {
+      console.error('Chat log error:', logError.message);
+    }
     checkAndAlert({ username, userMessage: lastUserMessage, aiReply: replyText });
 
     // Audio is handled client-side — just return text

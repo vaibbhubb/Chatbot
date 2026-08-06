@@ -1,43 +1,44 @@
 import { GoogleGenAI } from '@google/genai';
-import { ElevenLabsClient } from 'elevenlabs';
+import { getSession } from '../../../lib/session';
+import { getSystemPrompt } from '../../../lib/vaibhav-context';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const elevenlabs = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
+
 
 export async function POST(req) {
   try {
-    const { message } = await req.json();
+    const { messages } = await req.json();
 
-    // 1. Generate text response using Gemini 2.5 Flash
+    // Get the user's tier from session for context control
+    const session = await getSession();
+    const userTier = session?.tier || 'public';
+
+    // Load tiered system prompt
+    const systemInstruction = getSystemPrompt(userTier);
+
+    // Format chat history for Gemini
+    const formattedContents = messages.map((msg) => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.content }],
+    }));
+
+    // Generate text response
     const aiResponse = await ai.models.generateContent({
-      model: 'gemini-flash-latest',
-      contents: message,
+      model: 'gemini-2.5-flash',
+      contents: formattedContents,
+      config: { systemInstruction },
     });
 
     const replyText = aiResponse.text;
 
-    // 2. Convert text to speech using ElevenLabs (using a default popular voice ID, e.g., "Adam")
-    const audioStream = await elevenlabs.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
-      text: replyText,
-      model_id: "eleven_multilingual_v2",
-      output_format: "mp3_44100_128",
-    });
-
-    // Read the stream into a buffer
-    const chunks = [];
-    for await (const chunk of audioStream) {
-      chunks.push(chunk);
-    }
-    const audioBuffer = Buffer.concat(chunks);
-    const audioBase64 = audioBuffer.toString('base64');
-
-    return Response.json({ 
-      reply: replyText, 
-      audio: audioBase64 
+    // Audio is now handled client-side via browser SpeechSynthesis — no server TTS needed
+    return Response.json({
+      reply: replyText,
+      tier: userTier,
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Chat API Error:', error);
     return Response.json({ error: 'Failed to generate response' }, { status: 500 });
   }
 }

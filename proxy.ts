@@ -4,6 +4,7 @@ import { decrypt } from './lib/session';
 
 // Routes that require authentication
 const protectedRoutes = ['/chat'];
+const publicChatRoutes = ['/chat/see'];
 // Routes that redirect to /chat when already logged in
 const authRoutes = ['/login', '/signup'];
 
@@ -12,6 +13,10 @@ export async function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get('session')?.value;
   const session = sessionToken ? await decrypt(sessionToken) : null;
   const isLoggedIn = !!session;
+
+  if (publicChatRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
 
   // Unauthenticated access to protected route → redirect to /login
   if (protectedRoutes.some(route => pathname.startsWith(route))) {

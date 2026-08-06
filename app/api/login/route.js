@@ -14,10 +14,20 @@ export async function POST(req) {
     }
 
     // Look up by username OR email
-    const [users] = await pool.query(
-      'SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1',
-      [identifier, identifier]
-    );
+    let users;
+    try {
+      const [rows] = await pool.query(
+        'SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1',
+        [identifier, identifier]
+      );
+      users = rows;
+    } catch (dbError) {
+      console.error('Login DB lookup error:', dbError);
+      return Response.json(
+        { success: false, error: 'Database lookup failed. Check the production DB connection.' },
+        { status: 500 }
+      );
+    }
 
     if (users.length === 0) {
       return Response.json(
@@ -27,7 +37,16 @@ export async function POST(req) {
     }
 
     const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    let isMatch;
+    try {
+      isMatch = await bcrypt.compare(password, user.password_hash);
+    } catch (compareError) {
+      console.error('Login password compare error:', compareError);
+      return Response.json(
+        { success: false, error: 'Password verification failed. Check the stored password hash.' },
+        { status: 500 }
+      );
+    }
 
     if (!isMatch) {
       return Response.json(
@@ -37,7 +56,15 @@ export async function POST(req) {
     }
 
     // Create session cookie
-    await createSession({ userId: user.id, username: user.username });
+    try {
+      await createSession({ userId: user.id, username: user.username });
+    } catch (sessionError) {
+      console.error('Login session creation error:', sessionError);
+      return Response.json(
+        { success: false, error: 'Session creation failed. Check JWT_SECRET and cookie settings in production.' },
+        { status: 500 }
+      );
+    }
 
 
     return Response.json({

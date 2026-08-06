@@ -3,21 +3,20 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
-// ── Tier badge config ───────────────────────────────────────────────
-const TIER_CONFIG = {
-  close:  { label: 'Close friend', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', border: 'rgba(245,158,11,0.25)' },
-  friend: { label: 'Friend',       color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.25)' },
-  public: { label: 'Visitor',      color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.2)' },
-};
-
 // ── Helper: format timestamp ────────────────────────────────────────
 function formatTime(date) {
   return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
-export default function ChatUI({ username, tier = 'public' }) {
+const tierInfo = {
+  label: 'Personal',
+  color: '#c4b5fd',
+  bg: 'rgba(139, 92, 246, 0.12)',
+  border: 'rgba(139, 92, 246, 0.35)',
+};
+
+export default function ChatUI({ username }) {
   const router = useRouter();
-  const tierInfo = TIER_CONFIG[tier] || TIER_CONFIG.public;
 
   const [messages, setMessages] = useState([
     { role: 'ai', content: "Hey! I'm Vaibhav's AI clone. What's up?", time: new Date() }
@@ -63,47 +62,6 @@ export default function ChatUI({ username, tier = 'public' }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // ── Send text message ─────────────────────────────────────────────
-  const handleSend = useCallback(async (text) => {
-    if (!text?.trim() || loading) return;
-
-    const userMsg = { role: 'user', content: text, time: new Date() };
-    const updated = [...messages, userMsg];
-    setMessages(updated);
-    setInput('');
-    setLoading(true);
-
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: updated }),
-      });
-      const data = await res.json();
-      if (data.reply) {
-        const aiMsg = { role: 'ai', content: data.reply, time: new Date() };
-        const withAi = [...updated, aiMsg];
-        setMessages(withAi);
-
-        // Auto-play if toggle is on
-        if (autoPlay) {
-          speakText(data.reply, withAi.length - 1);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [messages, loading, autoPlay]);
-
-
-  const handleSubmit = (e) => { e.preventDefault(); handleSend(input); };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(input); }
-  };
-
   // ── Browser SpeechSynthesis ───────────────────────────────────────
   const speakText = useCallback((text, msgIdx) => {
     if (!window.speechSynthesis) return;
@@ -126,10 +84,57 @@ export default function ChatUI({ username, tier = 'public' }) {
     window.speechSynthesis.speak(utter);
   }, []);
 
-  const stopSpeaking = useCallback(() => {
+  const stopSpeaking = () => {
     window.speechSynthesis?.cancel();
     setPlayingIdx(null);
-  }, []);
+  };
+
+  // ── Send text message ─────────────────────────────────────────────
+  const handleSend = useCallback(async (text) => {
+    if (!text?.trim() || loading) return;
+
+    const userMsg = { role: 'user', content: text, time: new Date() };
+    const updated = [...messages, userMsg];
+    setMessages(updated);
+    setInput('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: updated }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        const errorReply = data.error || 'I had trouble replying just now. Try again in a moment.';
+        setMessages([...updated, { role: 'ai', content: errorReply, time: new Date() }]);
+        return;
+      }
+
+      if (data.reply) {
+        const aiMsg = { role: 'ai', content: data.reply, time: new Date() };
+        const withAi = [...updated, aiMsg];
+        setMessages(withAi);
+
+        // Auto-play if toggle is on
+        if (autoPlay) {
+          speakText(data.reply, withAi.length - 1);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [messages, loading, autoPlay, speakText]);
+
+
+  const handleSubmit = (e) => { e.preventDefault(); handleSend(input); };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(input); }
+  };
 
   const handlePlayMessage = (msg, idx) => {
     if (playingIdx === idx) {

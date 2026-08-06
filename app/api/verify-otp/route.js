@@ -39,8 +39,8 @@ export async function POST(req) {
 
     const newUserId = result.insertId;
 
-    // Auto-login: create session cookie (new users start at 'public' tier)
-    await createSession({ userId: newUserId, username, tier: 'public' });
+    // Auto-login: create session cookie
+    await createSession({ userId: newUserId, username });
 
 
     return Response.json({

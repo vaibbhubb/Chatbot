@@ -36,8 +36,8 @@ export async function POST(req) {
       );
     }
 
-    // Create session cookie (include tier for context control)
-    await createSession({ userId: user.id, username: user.username, tier: user.tier || 'public' });
+    // Create session cookie
+    await createSession({ userId: user.id, username: user.username });
 
 
     return Response.json({

@@ -14,5 +14,5 @@ export default async function ChatPage() {
     redirect('/login');
   }
 
-  return <ChatUI username={session.username} tier={session.tier || 'public'} />;
+  return <ChatUI username={session.username} />;
 }

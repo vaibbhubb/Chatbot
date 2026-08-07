@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
@@ -59,7 +59,8 @@ const STYLES = `
   .user-row:hover { background: rgba(99,102,241,0.08); }
   .user-av { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem; color: #fff; flex-shrink: 0; }
   .user-info { flex: 1; min-width: 0; }
-  .user-name { font-weight: 600; color: #fff; font-size: 0.95rem; }
+  .user-name { font-weight: 600; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; }
+  .user-email { font-size: 0.75rem; color: rgba(255,255,255,0.3); font-weight: 400; }
   .user-meta { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-top: 0.1rem; }
   .user-count { background: rgba(99,102,241,0.15); color: #a5b4fc; border-radius: 20px; padding: 0.25rem 0.7rem; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
 
@@ -67,7 +68,7 @@ const STYLES = `
   .conv-header { display: flex; align-items: center; gap: 0.75rem; padding: 1rem 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .back-btn { width: 34px; height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; transition: background 0.2s; flex-shrink: 0; }
   .back-btn:hover { background: rgba(255,255,255,0.1); }
-  .conv-title { font-weight: 700; color: #fff; font-size: 1.05rem; }
+  .conv-title { font-weight: 700; color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; }
   .conv-subtitle { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
 
   .msg-list { padding: 1rem; display: flex; flex-direction: column; gap: 1rem; max-height: 65vh; overflow-y: auto; }
@@ -91,7 +92,7 @@ const STYLES = `
   .q-table th { text-align: left; padding: 0.8rem 1rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); }
   .q-table td { padding: 0.85rem 1rem; font-size: 0.88rem; color: #e2e8f0; vertical-align: top; border-bottom: 1px solid rgba(255,255,255,0.04); }
   .q-table tr:hover td { background: rgba(255,255,255,0.02); }
-  .q-user { font-weight: 700; color: #a5b4fc; }
+  .q-user { font-weight: 700; color: #a5b4fc; display: flex; flex-direction: column; gap: 0.1rem; }
 
   @media (max-width: 640px) {
     .dash-inner { padding: 1rem 0.75rem 2rem; }
@@ -108,6 +109,21 @@ export default function DashboardView({ users, recentQueries }) {
   const [userMessages, setUserMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
+  // Handle browser back button properly
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.view === 'conversation') {
+        // Handled below if we wanted to support direct deep linking, but typically
+        // if they hit back, we just want to clear the selected user.
+      } else {
+        setSelectedUser(null);
+        setUserMessages([]);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const totalMessages = users.reduce(
     (sum, u) => sum + Number(u.message_count),
     0
@@ -115,6 +131,9 @@ export default function DashboardView({ users, recentQueries }) {
 
   async function openUser(username) {
     setSelectedUser(username);
+    // Push state so browser back button works
+    window.history.pushState({ view: 'conversation', username }, '', window.location.pathname);
+    
     setLoadingMessages(true);
     try {
       const res = await fetch(
@@ -132,6 +151,10 @@ export default function DashboardView({ users, recentQueries }) {
   function closeUser() {
     setSelectedUser(null);
     setUserMessages([]);
+    // If we're closing via the button, replace state or go back
+    if (window.history.state?.view === 'conversation') {
+      window.history.back();
+    }
   }
 
   return (
@@ -250,7 +273,10 @@ export default function DashboardView({ users, recentQueries }) {
                     {u.username?.[0]?.toUpperCase() || "?"}
                   </div>
                   <div className="user-info">
-                    <div className="user-name">@{u.username}</div>
+                    <div className="user-name">
+                      @{u.username}
+                      {u.email && <span className="user-email">({u.email})</span>}
+                    </div>
                     <div className="user-meta">
                       Last active {timeAgo(u.last_active)}
                     </div>
@@ -294,7 +320,10 @@ export default function DashboardView({ users, recentQueries }) {
                       <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>
                         {formatDate(row.created_at)}
                       </td>
-                      <td className="q-user">@{row.username}</td>
+                      <td className="q-user">
+                        @{row.username}
+                        {row.email && <span className="user-email">({row.email})</span>}
+                      </td>
                       <td
                         style={{
                           whiteSpace: "pre-wrap",

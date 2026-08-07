@@ -58,11 +58,10 @@ export async function POST(req) {
       throw new Error('Gemini returned an empty reply');
     }
 
-    // 2. Check if this message needs to alert the real Vaibhav
-    //    Run this in the background (don't block the response)
+    // 2. Log the query + reply and check if this needs to alert Vaibhav
     const lastUserMessage = messages.filter(m => m.role === 'user').pop()?.content || '';
     try {
-      await logChatQuery({ username, queryText: lastUserMessage });
+      await logChatQuery({ username, queryText: lastUserMessage, replyText });
     } catch (logError) {
       console.error('Chat log error:', logError.message);
     }

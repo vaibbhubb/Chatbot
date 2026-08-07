@@ -79,8 +79,8 @@ export default function SignupPage() {
     e.preventDefault();
     setError('');
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+    if (password.length < 1) {
+      setError('Password cannot be empty.');
       return;
     }
     if (password !== confirmPassword) {

@@ -5,19 +5,11 @@ import { getSystemPrompt } from '../../../lib/vaibhav-context';
 import { logChatQuery } from '../../../lib/chat-queries';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const CHAT_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
-const CLASSIFIER_MODELS = ['gemini-2.0-flash-lite', 'gemini-2.0-flash'];
+const CHAT_MODELS = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
+const CLASSIFIER_MODELS = ['gemini-3.5-flash-lite', 'gemini-3.5-flash'];
 
-// Email transporter (reuse existing Hostinger SMTP)
-const transporter = nodemailer.createTransport({
-  host: 'smtp.hostinger.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Email transporter is created per-alert (inside checkAndAlert) so that
+// env vars are always resolved by the time the function runs.
 
 // Simple in-process cooldown: don't spam Vaibhav if same user sends multiple alerts
 // (resets on server restart — good enough for a personal bot)
@@ -74,7 +66,8 @@ export async function POST(req) {
     } catch (logError) {
       console.error('Chat log error:', logError.message);
     }
-    checkAndAlert({ username, userMessage: lastUserMessage, aiReply: replyText });
+    // Await so errors surface in server logs instead of being silently dropped
+    await checkAndAlert({ username, userMessage: lastUserMessage, aiReply: replyText });
 
     // Audio is handled client-side — just return text
     return Response.json({ reply: replyText });
@@ -82,10 +75,17 @@ export async function POST(req) {
   } catch (error) {
     console.error('Chat API Error:', error);
 
+    // Quota exhausted — all Gemini models are rate-limited right now
+    if (error.isQuotaExhausted) {
+      return Response.json({
+        reply: "I'm getting a lot of messages right now and hit my rate limit 😅 Give me a minute and try again!",
+      });
+    }
+
     // Keep local testing usable even when the upstream model call fails.
     if (process.env.NODE_ENV !== 'production') {
       return Response.json({
-        reply: "I hit a local hiccup, but I’m still alive 😅 Try sending that again in a sec.",
+        reply: `Something went wrong on my end — check the server logs for details.`,
       });
     }
 
@@ -126,6 +126,8 @@ Answer with just: YES or NO (and one short reason after a dash)`,
     const classification = classifyResponse.text?.trim() || '';
     const isImportant = classification.toUpperCase().startsWith('YES');
 
+    console.log(`[Alert] Classifier result for @${username}: ${classification}`);
+
     if (!isImportant) return;
 
     // Mark cooldown
@@ -138,6 +140,17 @@ Answer with just: YES or NO (and one short reason after a dash)`,
       console.warn(`Alert would have sent for @${username}: "${userMessage}"`);
       return;
     }
+
+    // Create transporter here so env vars are always resolved at call time
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.hostinger.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
     const now = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 
@@ -157,7 +170,7 @@ Answer with just: YES or NO (and one short reason after a dash)`,
 
             <p style="margin: 0 0 6px; font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">What they said</p>
             <div style="background: rgba(255,255,255,0.05); border-left: 3px solid #6366f1; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px;">
-              <p style="margin: 0; font-size: 15px; color: #f1f5f9; line-height: 1.5;">"${userMessage}"</p>
+              <p style="margin: 0; font-size: 15px; color: #f1f5f9; line-height: 1.5;">&quot;${userMessage}&quot;</p>
             </div>
 
             <p style="margin: 0 0 6px; font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Bot's reply</p>
@@ -176,13 +189,14 @@ Answer with just: YES or NO (and one short reason after a dash)`,
     console.log(`✅ Alert sent to ${alertEmail} for @${username}`);
 
   } catch (err) {
-    // Alert errors should never crash the chat
-    console.error('Alert system error:', err.message);
+    // Alert errors should never crash the chat — but DO log the full error
+    console.error('Alert system error:', err);
   }
 }
 
 async function generateWithFallback(request, models) {
   let lastError;
+  let allRateLimited = true;
 
   for (const model of models) {
     try {
@@ -190,9 +204,22 @@ async function generateWithFallback(request, models) {
     } catch (err) {
       lastError = err;
       const status = err?.status || err?.error?.status;
-      if (status === 404 || status === 429) continue;
+      if (status === 404 || status === 429) {
+        // 404 = model gone, 429 = rate limited — try next model
+        if (status !== 429) allRateLimited = false;
+        continue;
+      }
+      allRateLimited = false;
       throw err;
     }
+  }
+
+  // If every model was rate-limited, throw a typed error so the caller can
+  // return a friendly message instead of a generic 500.
+  if (allRateLimited) {
+    const quotaErr = new Error('All models rate-limited');
+    quotaErr.isQuotaExhausted = true;
+    throw quotaErr;
   }
 
   throw lastError;

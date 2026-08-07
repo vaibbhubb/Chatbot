@@ -1,9 +1,9 @@
-import { getChatSeeSession } from '../../../../lib/chat-see-session';
+import { getDashboardSession } from '../../../../lib/dashboard-session';
 import { getUserMessages } from '../../../../lib/chat-queries';
 
 export async function GET(req) {
   try {
-    const session = await getChatSeeSession();
+    const session = await getDashboardSession();
     if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }

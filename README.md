@@ -12,16 +12,37 @@ This is Vaibhav's personal AI clone — a chatbot that represents him, talks lik
 
 ---
 
-## Features
+## ✨ Features
 
-- 🤖 **AI Persona** — Gemini 2.0 Flash trained on Vaibhav's personality, interests, and communication style
-- 🔐 **Auth System** — Signup with OTP email verification, JWT sessions
-- 🎤 **Voice Input** — Record audio, auto-transcribed to text via Gemini
-- 🔊 **Text-to-Speech** — Browser-native voice playback on any AI message
-- 🔔 **Smart Alerts** — Gemini classifies messages and emails the real Vaibhav if something important comes up
-- 📱 **Mobile-first UI** — WhatsApp-style fixed header, scrollable chat, pinned input bar
-- 🗄️ **TiDB Cloud** — Cloud MySQL database for users and chat logs
-- 🚀 **Deployed on Vercel** — Zero-downtime, auto-deploy on every git push
+<details open>
+<summary><b>🤖 The "Real" AI Persona</b></summary>
+Powered by <b>Gemini 3.5 Flash</b>, the bot is trained on Vaibhav's exact personality, tone, and interests. It overthinks, it jokes, and it talks just like the real deal!
+</details>
+
+<details open>
+<summary><b>🚨 Smart Real-Time Alerts</b></summary>
+Say something important? The AI acts as a smart receptionist. It classifies your messages on the fly and <b>instantly emails the real Vaibhav</b> if you drop a job offer, share contact info, or need urgent attention!
+</details>
+
+<details>
+<summary><b>🔐 Secure OTP Auth</b></summary>
+A custom-built authentication system using JWTs and email-based OTP verification.
+</details>
+
+<details>
+<summary><b>🎙️ Voice to Text & Text to Speech</b></summary>
+Don't want to type? Use the microphone to record your voice, which gets transcribed instantly. The AI can also speak its replies back to you using browser-native TTS!
+</details>
+
+<details>
+<summary><b>📈 Admin Dashboard & Analytics</b></summary>
+A private admin panel to monitor users, view chat logs, and track activity, alongside built-in Vercel Web Analytics.
+</details>
+
+<details>
+<summary><b>📱 Fluid Mobile Experience</b></summary>
+A WhatsApp-style layout with a fixed header, scrollable message view, and a pinned input bar that feels exactly like a native app.
+</details>
 
 ---
 

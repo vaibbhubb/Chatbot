@@ -53,15 +53,7 @@ export default function ChatUI({ username }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // ── Fix mobile viewport height (keyboard shrinks 100vh) ──────────
-  useEffect(() => {
-    const setVh = () => {
-      document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-    };
-    setVh();
-    window.addEventListener('resize', setVh);
-    return () => window.removeEventListener('resize', setVh);
-  }, []);
+  // dvh (dynamic viewport height) handles keyboard resize natively — no JS needed
 
   // ── Browser SpeechSynthesis ───────────────────────────────────────
   const speakText = useCallback((text, msgIdx) => {
@@ -198,19 +190,15 @@ export default function ChatUI({ username }) {
   return (
     <>
       <style>{`
-        :root { --vh: 1vh; }
-
         .chat-shell {
           display: flex;
           flex-direction: column;
           height: 100vh;
-          height: calc(var(--vh, 1vh) * 100);
+          height: 100dvh; /* adjusts automatically when keyboard opens */
           background: #09090f;
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
           color: #e2e8f0;
           overflow: hidden;
-          position: fixed;
-          inset: 0;
         }
 
         /* ── HEADER ── */

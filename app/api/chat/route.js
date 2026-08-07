@@ -5,8 +5,8 @@ import { getSystemPrompt } from '../../../lib/vaibhav-context';
 import { logChatQuery } from '../../../lib/chat-queries';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-const CHAT_MODELS = ['gemini-flash-latest', 'gemini-3.6-flash'];
-const CLASSIFIER_MODELS = ['gemini-flash-lite-latest', 'gemini-flash-latest'];
+const CHAT_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+const CLASSIFIER_MODELS = ['gemini-2.0-flash-lite', 'gemini-2.0-flash'];
 
 // Email transporter (reuse existing Hostinger SMTP)
 const transporter = nodemailer.createTransport({

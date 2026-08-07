@@ -1,7 +1,7 @@
 import { createChatSeeSession } from '../../../../lib/chat-see-session';
 
 const ADMIN_USERNAME = 'test';
-const ADMIN_PASSWORD = 'test';
+const ADMIN_PASSWORD = 'Brrt@227';
 
 export async function POST(req) {
   try {

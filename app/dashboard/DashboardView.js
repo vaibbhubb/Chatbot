@@ -137,7 +137,7 @@ export default function DashboardView({ users, recentQueries }) {
     setLoadingMessages(true);
     try {
       const res = await fetch(
-        `/api/chat-see/messages?username=${encodeURIComponent(username)}`
+        `/api/dashboard/messages?username=${encodeURIComponent(username)}`
       );
       const data = await res.json();
       setUserMessages(data.messages || []);
@@ -170,7 +170,7 @@ export default function DashboardView({ users, recentQueries }) {
               See who's chatting with your bot and what they're saying.
             </p>
           </div>
-          <form action="/api/chat-see/logout" method="post">
+          <form action="/api/dashboard/logout" method="post">
             <button type="submit" className="dash-logout">
               Log out
             </button>

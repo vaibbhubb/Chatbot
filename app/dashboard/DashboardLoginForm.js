@@ -16,7 +16,7 @@ export default function DashboardLoginForm() {
     setError('');
 
     try {
-      const response = await fetch('/api/chat-see/login', {
+      const response = await fetch('/api/dashboard/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

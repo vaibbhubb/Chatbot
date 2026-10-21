@@ -318,7 +318,15 @@ const STYLES = `
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function AnalyticsView({ analytics }) {
   const [liveAnalytics, setLiveAnalytics] = useState(analytics);
-  const { totals, dailyActivity, hourlyActivity, topUsers } = liveAnalytics;
+  const [userSearch, setUserSearch] = useState("");
+  const totals = liveAnalytics?.totals || { total_messages: 0, total_users: 0 };
+  const dailyActivity = liveAnalytics?.dailyActivity || [];
+  const hourlyActivity = liveAnalytics?.hourlyActivity || [];
+  const topUsers = Array.isArray(liveAnalytics?.topUsers) ? liveAnalytics.topUsers : [];
+
+  useEffect(() => {
+    setLiveAnalytics(analytics);
+  }, [analytics]);
 
   useEffect(() => {
     let active = true;
@@ -334,10 +342,18 @@ export default function AnalyticsView({ analytics }) {
       }
     };
 
-    const intervalId = window.setInterval(refreshAnalytics, 30_000);
+    refreshAnalytics();
+    const intervalId = window.setInterval(refreshAnalytics, 10_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshAnalytics();
+    };
+    window.addEventListener('focus', refreshAnalytics);
+    document.addEventListener('visibilitychange', onVisible);
     return () => {
       active = false;
       window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshAnalytics);
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 
@@ -362,7 +378,15 @@ export default function AnalyticsView({ analytics }) {
     return Array.from({ length: 24 }, (_, h) => ({ hour: h, count: map[h] || 0 }));
   })();
 
-  const maxUser = topUsers.length > 0 ? Number(topUsers[0].message_count) : 1;
+  const visibleUsers = topUsers.filter((u) => {
+    const q = userSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      String(u.username || "").toLowerCase().includes(q) ||
+      String(u.email || "").toLowerCase().includes(q)
+    );
+  });
+  const maxUser = topUsers.length > 0 ? Math.max(...topUsers.map((u) => Number(u.message_count) || 0), 1) : 1;
   const avgMessagesPerUser = totals.total_users > 0
     ? (Number(totals.total_messages) / Number(totals.total_users)).toFixed(1)
     : "0";
@@ -467,17 +491,36 @@ export default function AnalyticsView({ analytics }) {
         {/* ── Top Users ── */}
         <div className="an-glass">
           <div className="an-section-title">
-            🏆 Top Users <span>by message count</span>
+            🏆 Users <span>{topUsers.length} accounts, including signups with 0 messages</span>
           </div>
+          <input
+            value={userSearch}
+            onChange={(e) => setUserSearch(e.target.value)}
+            placeholder="Search username or email"
+            style={{
+              width: "100%",
+              marginBottom: "0.85rem",
+              padding: "0.65rem 0.85rem",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.04)",
+              color: "#fff",
+              fontSize: "0.88rem",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
           {topUsers.length === 0 ? (
             <div className="an-empty">No users yet.</div>
+          ) : visibleUsers.length === 0 ? (
+            <div className="an-empty">No user matches that username or email.</div>
           ) : (
-            topUsers.map((u, i) => {
+            visibleUsers.map((u, i) => {
               const pct = (Number(u.message_count) / maxUser) * 100;
               const avClass = i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
               const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : String(i + 1);
               return (
-                <div key={u.username} className="an-user-row">
+                <div key={`${u.username}-${u.email || ""}`} className="an-user-row">
                   <div className="an-user-rank">{medal}</div>
                   <div className={`an-user-av ${avClass}`}>
                     {u.username?.[0]?.toUpperCase() || "?"}

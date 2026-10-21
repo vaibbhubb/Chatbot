@@ -1,6 +1,8 @@
 import { getDashboardSession } from '../../../../lib/dashboard-session';
 import { getAnalyticsData } from '../../../../lib/chat-queries';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   const session = await getDashboardSession();
 

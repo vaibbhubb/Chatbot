@@ -4,6 +4,10 @@ import nodemailer from 'nodemailer';
 export async function POST(req) {
   try {
     const { email } = await req.json();
+    const cleanEmail = String(email || '').trim();
+    if (!cleanEmail) {
+      return Response.json({ success: false, error: 'Email is required.' }, { status: 400 });
+    }
     
     // Generate a random 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -14,7 +18,7 @@ export async function POST(req) {
     // 1. Save the OTP to the TiDB database
     await pool.query(
       'INSERT INTO otp_codes (email, otp_code, expires_at) VALUES (?, ?, ?)',
-      [email, otp, expiresAt]
+      [cleanEmail, otp, expiresAt]
     );
 
     // 2. Setup the email transporter for Hostinger
@@ -31,7 +35,7 @@ export async function POST(req) {
     // 3. Send the email
     await transporter.sendMail({
       from: `"Vaibhav's AI Bot" <${process.env.EMAIL_USER}>`,
-      to: email,
+      to: cleanEmail,
       subject: 'Your Chat Login OTP',
       text: `Your OTP is: ${otp}. It is valid for 10 minutes.`,
     });

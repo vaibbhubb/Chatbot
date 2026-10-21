@@ -4,7 +4,9 @@ import { useState, useEffect } from "react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
+  if (!dateStr) return "never";
   const diff = Date.now() - new Date(dateStr).getTime();
+  if (Number.isNaN(diff)) return "never";
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
   if (mins < 60) return `${mins}m ago`;
@@ -105,9 +107,47 @@ const STYLES = `
 // ── Main Component ───────────────────────────────────────────────────────────
 export default function DashboardView({ users, recentQueries }) {
   const [tab, setTab] = useState("users");
+  const [liveUsers, setLiveUsers] = useState(users);
+  const [liveQueries, setLiveQueries] = useState(recentQueries);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userMessages, setUserMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
+
+  useEffect(() => {
+    setLiveUsers(users);
+    setLiveQueries(recentQueries);
+  }, [users, recentQueries]);
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshOverview = async () => {
+      try {
+        const response = await fetch('/api/dashboard/overview', { cache: 'no-store' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!active) return;
+        if (Array.isArray(data.users)) setLiveUsers(data.users);
+        if (Array.isArray(data.recentQueries)) setLiveQueries(data.recentQueries);
+      } catch {
+        // Keep the latest successful snapshot if a refresh fails.
+      }
+    };
+
+    refreshOverview();
+    const intervalId = window.setInterval(refreshOverview, 10_000);
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refreshOverview();
+    };
+    window.addEventListener('focus', refreshOverview);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshOverview);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
 
   // Handle browser back button properly
   useEffect(() => {
@@ -124,10 +164,15 @@ export default function DashboardView({ users, recentQueries }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const totalMessages = users.reduce(
+  const totalMessages = liveUsers.reduce(
     (sum, u) => sum + Number(u.message_count),
     0
   );
+  const lastActivity = liveUsers.reduce((latest, u) => {
+    if (!u.last_active) return latest;
+    if (!latest) return u.last_active;
+    return new Date(u.last_active) > new Date(latest) ? u.last_active : latest;
+  }, null);
 
   async function openUser(username) {
     setSelectedUser(username);
@@ -180,7 +225,7 @@ export default function DashboardView({ users, recentQueries }) {
         {/* ── Stats ── */}
         <div className="stats">
           <div className="stat-card">
-            <div className="stat-val">{users.length}</div>
+            <div className="stat-val">{liveUsers.length}</div>
             <div className="stat-lbl">Total users</div>
           </div>
           <div className="stat-card">
@@ -189,7 +234,7 @@ export default function DashboardView({ users, recentQueries }) {
           </div>
           <div className="stat-card">
             <div className="stat-val">
-              {users.length > 0 ? timeAgo(users[0].last_active) : "—"}
+              {lastActivity ? timeAgo(lastActivity) : "—"}
             </div>
             <div className="stat-lbl">Last activity</div>
           </div>
@@ -260,10 +305,10 @@ export default function DashboardView({ users, recentQueries }) {
         ) : tab === "users" ? (
           /* ── User list ── */
           <div className="glass">
-            {users.length === 0 ? (
+            {liveUsers.length === 0 ? (
               <div className="empty">No users yet.</div>
             ) : (
-              users.map((u, i) => (
+              liveUsers.map((u, i) => (
                 <div
                   key={i}
                   className="user-row"
@@ -301,7 +346,7 @@ export default function DashboardView({ users, recentQueries }) {
                 </tr>
               </thead>
               <tbody>
-                {recentQueries.length === 0 ? (
+                {liveQueries.length === 0 ? (
                   <tr>
                     <td
                       colSpan={4}
@@ -315,7 +360,7 @@ export default function DashboardView({ users, recentQueries }) {
                     </td>
                   </tr>
                 ) : (
-                  recentQueries.map((row, i) => (
+                  liveQueries.map((row, i) => (
                     <tr key={i}>
                       <td style={{ whiteSpace: "nowrap", fontSize: "0.82rem" }}>
                         {formatDate(row.created_at)}

@@ -5,8 +5,10 @@ import bcrypt from 'bcryptjs';
 export async function POST(req) {
   try {
     const { username, email, password, otp } = await req.json();
+    const cleanUsername = String(username || '').trim();
+    const cleanEmail = String(email || '').trim();
 
-    if (!username || !email || !password || !otp) {
+    if (!cleanUsername || !cleanEmail || !password || !otp) {
       return Response.json(
         { success: false, error: 'All fields are required.' },
         { status: 400 }
@@ -16,7 +18,7 @@ export async function POST(req) {
     // Validate OTP
     const [otpRows] = await pool.query(
       'SELECT * FROM otp_codes WHERE email = ? AND otp_code = ? AND is_used = FALSE AND expires_at > NOW() ORDER BY created_at DESC LIMIT 1',
-      [email, otp]
+      [cleanEmail, otp]
     );
 
     if (otpRows.length === 0) {
@@ -34,19 +36,19 @@ export async function POST(req) {
 
     const [result] = await pool.query(
       'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-      [username, email, hashedPassword]
+      [cleanUsername, cleanEmail, hashedPassword]
     );
 
     const newUserId = result.insertId;
 
     // Auto-login: create session cookie
-    await createSession({ userId: newUserId, username });
+    await createSession({ userId: newUserId, username: cleanUsername });
 
 
     return Response.json({
       success: true,
       message: 'Account created successfully!',
-      username,
+      username: cleanUsername,
     });
   } catch (error) {
     console.error('Verify OTP error:', error);

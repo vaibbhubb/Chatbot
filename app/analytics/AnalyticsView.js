@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
@@ -317,7 +317,29 @@ const STYLES = `
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function AnalyticsView({ analytics }) {
-  const { totals, dailyActivity, hourlyActivity, topUsers, newUsers } = analytics;
+  const [liveAnalytics, setLiveAnalytics] = useState(analytics);
+  const { totals, dailyActivity, hourlyActivity, topUsers } = liveAnalytics;
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshAnalytics = async () => {
+      try {
+        const response = await fetch('/api/dashboard/analytics', { cache: 'no-store' });
+        if (!response.ok) return;
+        const nextAnalytics = await response.json();
+        if (active) setLiveAnalytics(nextAnalytics);
+      } catch {
+        // Keep showing the latest successful snapshot if a refresh fails.
+      }
+    };
+
+    const intervalId = window.setInterval(refreshAnalytics, 30_000);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   // Fill missing days in the last 30 days so chart is continuous
   const filledDailyActivity = (() => {
@@ -355,7 +377,7 @@ export default function AnalyticsView({ analytics }) {
           <div>
             <div className="an-eyebrow">📊 Private Analytics</div>
             <h1 className="an-title">AI Vaibhav — Analytics</h1>
-            <p className="an-subtitle">Real-time insights from your chatbot's usage.</p>
+            <p className="an-subtitle">Real-time insights from your chatbot&apos;s usage.</p>
           </div>
           <div className="an-nav">
             <a href="/dashboard" className="an-nav-link">👥 Users</a>
@@ -403,8 +425,8 @@ export default function AnalyticsView({ analytics }) {
         <div className="an-chart-grid">
           {/* Daily activity */}
           <div className="an-glass">
-            <div className="an-section-title">
-              📈 Daily Activity <span>last 30 days</span>
+              <div className="an-section-title">
+                📈 Daily Activity <span>last 30 days</span>
             </div>
             {filledDailyActivity.every((d) => d.count === 0) ? (
               <div className="an-empty">No data yet.</div>

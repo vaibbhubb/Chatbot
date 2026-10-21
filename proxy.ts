@@ -6,7 +6,7 @@ import { decrypt } from './lib/session';
 const protectedRoutes = ['/chat'];
 const publicChatRoutes = ['/chat/see'];
 // Routes that redirect to /chat when already logged in
-const authRoutes = ['/login', '/signup'];
+const authRoutes = ['/login', '/signup', '/forgot-password'];
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

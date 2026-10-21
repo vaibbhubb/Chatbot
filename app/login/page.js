@@ -140,6 +140,16 @@ export default function LoginPage() {
               onFocus={(e) => { if (!error) e.target.style.borderColor = 'rgba(99,102,241,0.6)'; }}
               onBlur={(e) => { if (!error) e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
             />
+            <div style={{ textAlign: 'right', marginTop: '0.55rem' }}>
+              <a
+                href="/forgot-password"
+                style={{ color: '#a5b4fc', textDecoration: 'none', fontSize: '0.8rem', fontWeight: 500 }}
+                onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+              >
+                Forgot password?
+              </a>
+            </div>
           </div>
 
           {/* Error message */}

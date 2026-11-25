@@ -1,7 +1,7 @@
 import { createDashboardSession } from '../../../../lib/dashboard-session';
 
 const ADMIN_USERNAME = 'test';
-const ADMIN_PASSWORD = 'Brrt@227';
+const ADMIN_PASSWORD = 'Crrt@227';
 
 export async function POST(req) {
   try {
